@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Multi-AI Orchestrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon">
+        <span class="logo-n">N</span>
+        <div class="logo-pulse"></div>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">NEXUS</span>
+        <span class="logo-sub">Multi-AI Orchestrator</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">MODE</div>
+      <div class="mode-selector">
+        <button class="mode-btn active" data-mode="auto" onclick="setMode('auto')">
+          <span class="mode-icon">⚡</span> Auto
+        </button>
+        <button class="mode-btn" data-mode="code" onclick="setMode('code')">
+          <span class="mode-icon">{'</>'}</span> Code
+        </button>
+        <button class="mode-btn" data-mode="chat" onclick="setMode('chat')">
+          <span class="mode-icon">💬</span> Chat
+        </button>
+        <button class="mode-btn" data-mode="vision" onclick="setMode('vision')">
+          <span class="mode-icon">👁</span> Vision
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">AI STACK</div>
+      <div id="ai-stack-list"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">ORCHESTRATION</div>
+      <div class="toggle-row">
+        <span>Cross-Check</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-crosscheck" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Auto-Repair</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-repair" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Multi-AI</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-multi" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">HISTORY</div>
+      <div id="chat-history-list">
+        <div class="history-empty">No sessions yet</div>
+      </div>
+      <button class="new-chat-btn" onclick="newChat()">+ New Session</button>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="settings-btn" onclick="openSettings()">⚙ Settings</button>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main id="main">
+    <div id="header-bar">
+      <button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      <div id="active-mode-display">
+        <span id="mode-label">⚡ Auto Mode</span>
+        <span id="active-ais-display"></span>
+      </div>
+      <div id="header-actions">
+        <button class="icon-btn" title="Clear chat" onclick="clearChat()">🗑</button>
+        <button class="icon-btn" title="Export chat" onclick="exportChat()">⬇</button>
+      </div>
+    </div>
+
+    <!-- CHAT AREA -->
+    <div id="chat-area">
+      <div id="welcome-screen">
+        <div class="welcome-icon">
+          <div class="welcome-ring"></div>
+          <span>N</span>
+        </div>
+        <h1>NEXUS</h1>
+        <p>Multi-AI Orchestrator. Semua AI-mu bekerja bersama, saling mengecek, saling melengkapi.</p>
+        <div class="welcome-chips">
+          <button onclick="quickPrompt('Tulis REST API Express.js dengan auth JWT dan database PostgreSQL')">🔧 REST API + JWT</button>
+          <button onclick="quickPrompt('Jelaskan cara kerja transformer di deep learning')">🧠 Explain AI</button>
+          <button onclick="quickPrompt('Buat game Snake di HTML CSS JS yang lengkap')">🎮 Game Snake</button>
+          <button onclick="quickPrompt('Analisa dan debug kode ini')">🔍 Debug Code</button>
+        </div>
+      </div>
+      <div id="messages"></div>
+    </div>
+
+    <!-- INPUT AREA -->
+    <div id="input-area">
+      <!-- Image Preview -->
+      <div id="image-preview-bar" style="display:none">
+        <div id="image-preview-list"></div>
+        <button onclick="clearImages()" class="clear-images-btn">✕ Clear Images</button>
+      </div>
+
+      <div id="input-row">
+        <button class="input-action-btn" onclick="document.getElementById('image-input').click()" title="Upload Image">📎</button>
+        <input type="file" id="image-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleImageUpload(event)">
+
+        <div id="textarea-wrapper">
+          <textarea
+            id="user-input"
+            placeholder="Tanya apa saja atau minta code... (Shift+Enter untuk newline)"
+            rows="1"
+            onkeydown="handleKeydown(event)"
+            oninput="autoResize(this)"
+          ></textarea>
+        </div>
+
+        <button id="send-btn" onclick="sendMessage()">
+          <span id="send-icon">▶</span>
+        </button>
+      </div>
+
+      <div id="input-footer">
+        <span id="token-count">0 tokens</span>
+        <span id="current-ai-display">No AI selected</span>
+        <span id="model-info"></span>
+      </div>
+    </div>
+  </main>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" style="display:none">
+    <div class="modal-overlay" onclick="closeSettings()"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>⚙ API Configuration</h2>
+        <button onclick="closeSettings()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">API keys disimpan di browser (localStorage). Tidak dikirim ke mana pun selain API resminya.</p>
+        <div id="api-key-inputs"></div>
+        <div class="modal-actions">
+          <button class="btn-save" onclick="saveSettings()">💾 Save All</button>
+          <button class="btn-clear" onclick="clearAllKeys()">🗑 Clear All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE PREVIEW MODAL -->
+  <div id="preview-modal" style="display:none">
+    <div class="modal-overlay" onclick="closePreview()"></div>
+    <div class="modal-box preview-modal-box">
+      <div class="modal-header">
+        <h2>👁 Preview</h2>
+        <div class="preview-tabs">
+          <button class="ptab active" onclick="switchPreviewTab('preview')">Preview</button>
+          <button class="ptab" onclick="switchPreviewTab('code')">Code</button>
+        </div>
+        <button onclick="closePreview()">✕</button>
+      </div>
+      <div id="preview-content">
+        <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+      <div id="preview-code-view" style="display:none">
+        <pre id="preview-code-text"></pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
